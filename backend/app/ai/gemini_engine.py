@@ -40,7 +40,7 @@ Respond ONLY with valid JSON in this exact format (no markdown, no backticks, no
   "notes": "<one sentence observation>"
 }"""
 
-MODELS_TO_TRY = ["gemini-3.6-flash", "gemini-3.7-flash"]
+MODELS_TO_TRY = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]
 
 
 class GeminiGrainEngine(BaseGrainEngine):
