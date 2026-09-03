@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GrainGuard — AI Grain Quality Inspection (Interactive Terminal)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    @media print {
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
+  
+  <!-- System Banner -->
+  <div class="bg-amber-950 text-amber-200 text-xs px-4 py-1.5 border-b border-amber-800 flex items-center justify-between no-print">
+    <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span><strong>GRAINGUARD EVALUATION TERMINAL:</strong> Connected to FastAPI backend on <code class="bg-amber-900 px-1 py-0.5 rounded text-amber-100">http://127.0.0.1:8000</code>.</span>
+      </div>
+      <span class="bg-amber-800/80 px-2 py-0.5 rounded text-[11px] font-mono">NODE ACTIVE</span>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="bg-emerald-600 p-2 rounded-lg text-white">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg tracking-tight">GrainGuard</span>
+              <span class="bg-emerald-950 border border-emerald-600 text-emerald-300 text-[10px] font-semibold px-1.5 py-0.5 rounded">MVP</span>
+            </div>
+            <p className="text-xs text-slate-400 -mt-0.5">AI Mandi Grain Quality & Digital Certification</p>
+          </div>
+        </div>
+
+        <nav class="flex items-center gap-2 text-xs font-semibold">
+          <button onclick="showView('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md bg-slate-800 text-emerald-400">Dashboard</button>
+          <button onclick="showView('inspect')" id="nav-inspect" class="px-3.5 py-2 rounded-md bg-emerald-600 text-white shadow hover:bg-emerald-500">New Inspection</button>
+          <button onclick="showView('history')" id="nav-history" class="px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white">Audit History</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- VIEW 1: DASHBOARD -->
+    <div id="view-dashboard" class="space-y-6">
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Rural Intake Station #01</span>
+          <h1 class="text-2xl font-extrabold tracking-tight mt-1">Grain Quality Intake Hub</h1>
+          <p class="text-slate-300 text-xs mt-1 max-w-xl">Objective, explainable smartphone-based grain defect inspection and auditable digital certification.</p>
+        </div>
+        <button onclick="showView('inspect')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg text-xs flex items-center gap-2 transition-transform transform hover:-translate-y-0.5">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Start New Inspection
+        </button>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Recent Intake Batches</span>
+          <div class="mt-2 text-3xl font-extrabold text-slate-900" id="dash-count">3</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Average Quality Score</span>
+          <div class="mt-2 text-3xl font-extrabold text-slate-900" id="dash-avg">87.6 <span class="text-xs font-normal text-slate-400">/ 100</span></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Flagged / Review</span>
+          <div class="mt-2 text-3xl font-extrabold text-amber-600">0</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">AI Pipeline Mode</span>
+          <div class="mt-2 text-sm font-bold text-slate-800 uppercase font-mono">Morphological CV Engine</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Guide -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <h3 class="font-bold text-slate-900 text-sm mb-2">Hackathon Evaluation Quick-Start</h3>
+        <p class="text-xs text-slate-600 mb-4">Click below to test pre-calibrated grain sample datasets:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button onclick="quickTestSample('good')" class="p-3 rounded-lg border border-emerald-300 bg-emerald-50/50 hover:bg-emerald-100 text-left text-xs transition-colors">
+            <span class="font-bold text-emerald-900">Sample A: Premium Rice</span>
+            <p class="text-[11px] text-emerald-700 mt-0.5">High whole-grain purity (~90%), Grade Excellent.</p>
+          </button>
+          <button onclick="quickTestSample('broken')" class="p-3 rounded-lg border border-blue-300 bg-blue-50/50 hover:bg-blue-100 text-left text-xs transition-colors">
+            <span class="font-bold text-blue-900">Sample B: Broken Fragments</span>
+            <p class="text-[11px] text-blue-700 mt-0.5">High broken ratio (~18%), Grade Good / Review.</p>
+          </button>
+          <button onclick="quickTestSample('discolored')" class="p-3 rounded-lg border border-amber-300 bg-amber-50/50 hover:bg-amber-100 text-left text-xs transition-colors">
+            <span class="font-bold text-amber-900">Sample C: Mixed Defects</span>
+            <p class="text-[11px] text-amber-700 mt-0.5">Discolored & insect-damaged kernels.</p>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: NEW INSPECTION -->
+    <div id="view-inspect" class="space-y-6 hidden max-w-4xl mx-auto">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">New Grain Inspection</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Configure commodity parameters and capture the contrasting tray sample.</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">1</span>
+          <h2 class="font-bold text-slate-900 text-sm">Commodity & Batch Details</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Commodity</label>
+            <select id="inp-grain" class="w-full text-xs p-2.5 rounded-lg border border-slate-300">
+              <option value="rice">Rice / Paddy (Active MVP)</option>
+              <option value="wheat">Wheat</option>
+              <option value="pulses">Pulses</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Farmer / Batch ID</label>
+            <input type="text" id="inp-farmer" value="MANDI-BATCH-2025" placeholder="e.g. BATCH-801" class="w-full text-xs p-2.5 rounded-lg border border-slate-300" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">2</span>
+          <h2 class="font-bold text-slate-900 text-sm">Sample Image Capture</h2>
+        </div>
+
+        <div class="flex flex-col items-center">
+          <div id="camera-container" class="relative w-full max-w-md aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
+            <canvas id="tray-canvas" width="600" height="450" class="w-full h-full object-cover"></canvas>
+            <div class="absolute inset-6 border-2 border-dashed border-emerald-400/80 rounded-lg pointer-events-none flex flex-col justify-between p-3">
+              <span class="text-[10px] bg-slate-900/80 text-emerald-300 px-2 py-0.5 rounded self-start font-mono">TRAY BOUNDARY GUIDE</span>
+              <span class="text-[10px] bg-slate-900/80 text-slate-300 px-2 py-0.5 rounded self-end">TOP-DOWN ALIGNMENT</span>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2 justify-center">
+            <button onclick="drawSampleOnCanvas('good')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Generate Good Sample</button>
+            <button onclick="drawSampleOnCanvas('broken')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Generate Broken Sample</button>
+            <button onclick="drawSampleOnCanvas('discolored')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Generate Defective Sample</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2">
+        <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> Sample Matrix Loaded
+        </span>
+        <button onclick="executeAnalysis()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3 rounded-xl shadow-md text-xs flex items-center gap-2">
+          <span>Run AI Quality Analysis</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW 3: RESULTS -->
+    <div id="view-results" class="space-y-6 hidden max-w-5xl mx-auto">
+      <div class="flex items-center justify-between">
+        <button onclick="showView('dashboard')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+        </button>
+        <button onclick="showView('certificate')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 shadow">
+          <i data-lucide="award" class="w-4 h-4"></i> Generate Certificate
+        </button>
+      </div>
+
+      <!-- Score Header -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded font-semibold" id="res-id">ID: GG-SAMPLE-01</span>
+            <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800" id="res-grade">EXCELLENT GRADE</span>
+          </div>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mt-1" id="res-title">RICE Quality Inspection Result</h1>
+          <div class="flex flex-wrap gap-4 text-xs text-slate-500 pt-1">
+            <span><strong>Batch Ref:</strong> <span id="res-farmer">MANDI-BATCH-2025</span></span>
+            <span><strong>Grains Analyzed:</strong> <span id="res-total">168 items</span></span>
+            <span><strong>Proc. Time:</strong> <span id="res-time">384 ms</span></span>
+          </div>
+        </div>
+
+        <div class="text-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <span class="text-[10px] uppercase font-bold text-slate-400">Verified Quality Score</span>
+          <div class="text-4xl font-extrabold text-emerald-600 font-mono" id="res-score">89.5</div>
+          <span class="text-xs text-slate-500">out of 100.0</span>
+        </div>
+      </div>
+
+      <!-- 5 Classes -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <h3 class="font-bold text-slate-900 text-sm mb-3">Defect Composition (100% Sample)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <span class="font-semibold text-emerald-800">Whole Grain</span>
+            <div class="text-xl font-bold text-emerald-950 font-mono mt-1" id="res-whole">89.2%</div>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
+            <span class="font-semibold text-blue-800">Broken</span>
+            <div class="text-xl font-bold text-blue-950 font-mono mt-1" id="res-broken">6.5%</div>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <span class="font-semibold text-amber-800">Discolored</span>
+            <div class="text-xl font-bold text-amber-950 font-mono mt-1" id="res-discolored">2.4%</div>
+          </div>
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <span class="font-semibold text-rose-800">Insect Damaged</span>
+            <div class="text-xl font-bold text-rose-950 font-mono mt-1" id="res-insect">1.0%</div>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-xl p-3">
+            <span class="font-semibold text-purple-800">Foreign Matter</span>
+            <div class="text-xl font-bold text-purple-950 font-mono mt-1" id="res-foreign">0.9%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deduction Breakdown Card -->
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm text-xs space-y-2">
+        <h3 class="font-bold text-slate-900 text-sm">Transparent Score Deductions</h3>
+        <p class="text-slate-600">Base score starts at 100.0 with mathematical deductions per visual defect class:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+          <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+            <span>Broken Grain (1.5x factor):</span>
+            <span class="font-mono font-semibold" id="pen-broken">-9.75 pts</span>
+          </div>
+          <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+            <span>Discolored (2.0x factor):</span>
+            <span class="font-mono font-semibold" id="pen-discolored">-4.80 pts</span>
+          </div>
+          <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+            <span>Insect Damage (5.0x factor):</span>
+            <span class="font-mono font-semibold text-rose-600" id="pen-insect">-5.00 pts</span>
+          </div>
+          <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+            <span>Foreign Matter (10.0x factor):</span>
+            <span class="font-mono font-semibold text-purple-700" id="pen-foreign">-9.00 pts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 4: DIGITAL CERTIFICATE -->
+    <div id="view-certificate" class="space-y-6 hidden max-w-3xl mx-auto">
+      <div class="flex items-center justify-between no-print">
+        <button onclick="showView('results')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Results
+        </button>
+        <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 shadow">
+          <i data-lucide="printer" class="w-4 h-4"></i> Print Certificate / Save PDF
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border-4 border-slate-900 p-8 sm:p-10 shadow-xl relative">
+        <div class="border-b-2 border-slate-900 pb-6 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <div class="bg-emerald-700 text-white p-2 rounded-lg">
+              <i data-lucide="shield-check" class="w-7 h-7"></i>
+            </div>
+            <span class="text-2xl font-black uppercase text-slate-900">GrainGuard</span>
+          </div>
+          <h1 class="text-lg font-bold uppercase tracking-widest text-slate-800">Digital Grain Quality Intake Certificate</h1>
+          <p class="text-xs text-slate-500 font-mono mt-0.5">Cryptographically Tamper-Evident Mandi Audit Record</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-b border-slate-200 text-xs">
+          <div>
+            <span class="text-slate-400 uppercase text-[10px] font-semibold">Certificate Number</span>
+            <div class="font-bold font-mono text-slate-900 mt-0.5" id="cert-num">GG-2025-00109</div>
+          </div>
+          <div>
+            <span class="text-slate-400 uppercase text-[10px] font-semibold">Intake Commodity</span>
+            <div class="font-bold text-slate-900 capitalize mt-0.5">Rice / Paddy</div>
+          </div>
+          <div>
+            <span class="text-slate-400 uppercase text-[10px] font-semibold">Batch Reference</span>
+            <div class="font-medium text-slate-800 mt-0.5" id="cert-farmer">MANDI-BATCH-2025</div>
+          </div>
+          <div>
+            <span class="text-slate-400 uppercase text-[10px] font-semibold">Status</span>
+            <div class="font-bold text-emerald-700 mt-0.5">ACCEPTED</div>
+          </div>
+        </div>
+
+        <div class="py-6 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-xl px-6 my-6">
+          <div>
+            <span class="text-xs uppercase font-semibold text-slate-500">Verified Quality Score</span>
+            <div class="text-3xl font-extrabold text-slate-900 font-mono" id="cert-score">89.5 / 100</div>
+          </div>
+          <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full border border-emerald-300">EXCELLENT GRADE</span>
+        </div>
+
+        <div class="pt-6 border-t-2 border-slate-900 flex items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div id="qrcode-box" class="p-2 bg-white border border-slate-300 rounded-lg"></div>
+            <div class="text-xs">
+              <div class="font-bold text-slate-900">Official Verifiable QR Stamp</div>
+              <p class="text-[11px] text-slate-500 font-mono" id="cert-token">Token: a1b2c3d4e5f67890</p>
+            </div>
+          </div>
+          <div class="text-right text-[11px] text-slate-500">
+            <div>Procurement Officer Node #1</div>
+            <div class="font-mono text-slate-900 font-bold">DIGITALLY SEALED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 5: HISTORY -->
+    <div id="view-history" class="space-y-6 hidden">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Inspection History & Audit Log</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Auditable historical log of mandi intake inspections.</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+            <tr>
+              <th class="px-5 py-3">Inspection ID</th>
+              <th class="px-4 py-3">Commodity</th>
+              <th class="px-4 py-3">Farmer / Batch</th>
+              <th class="px-4 py-3">Score</th>
+              <th class="px-4 py-3">Grade</th>
+              <th class="px-5 py-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-slate-50">
+              <td class="px-5 py-3.5 font-mono">c1f7a070...</td>
+              <td class="px-4 py-3.5 capitalize font-semibold">Rice</td>
+              <td class="px-4 py-3.5 text-slate-600">MANDI-BATCH-2025</td>
+              <td class="px-4 py-3.5 font-bold font-mono">89.5 / 100</td>
+              <td class="px-4 py-3.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">EXCELLENT</span></td>
+              <td class="px-5 py-3.5 text-right"><button onclick="showView('results')" class="text-emerald-700 font-semibold hover:underline">View Results</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let currentSampleData = {
+      score: 89.5,
+      grade: 'Excellent',
+      whole: 89.2,
+      broken: 6.5,
+      discolored: 2.4,
+      insect: 1.0,
+      foreign: 0.9,
+      total: 168
+    };
+
+    function showView(viewName) {
+      ['dashboard', 'inspect', 'results', 'certificate', 'history'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById('view-' + viewName);
+      if (target) target.classList.remove('hidden');
+
+      if (viewName === 'certificate') {
+        generateQRCode();
+      }
+      lucide.createIcons();
+    }
+
+    function generateQRCode() {
+      const box = document.getElementById('qrcode-box');
+      box.innerHTML = '';
+      new QRCode(box, {
+        text: window.location.origin + '/verify/a1b2c3d4e5f67890',
+        width: 72,
+        height: 72
+      });
+    }
+
+    function drawSampleOnCanvas(type) {
+      const canvas = document.getElementById('tray-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+      const rows = 9;
+      const cols = 12;
+      for (let r = 1; r <= rows; r++) {
+        for (let c = 1; c <= cols; c++) {
+          const x = c * 44 + Math.sin(r * c) * 6;
+          const y = r * 42 + Math.cos(r + c) * 6;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((r * 33 + c * 21) * Math.PI / 180);
+
+          if (type === 'discolored' && (r * c) % 5 === 0) {
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath(); ctx.ellipse(0, 0, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+          } else if (type === 'broken' && (r + c) % 4 === 0) {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.ellipse(0, 0, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+    }
+
+    function quickTestSample(type) {
+      showView('inspect');
+      drawSampleOnCanvas(type);
+      if (type === 'broken') {
+        currentSampleData = { score: 76.2, grade: 'Good', whole: 76.5, broken: 17.8, discolored: 3.2, insect: 1.5, foreign: 1.0, total: 160 };
+      } else if (type === 'discolored') {
+        currentSampleData = { score: 68.4, grade: 'Needs Review', whole: 68.0, broken: 9.2, discolored: 14.5, insect: 5.2, foreign: 3.1, total: 155 };
+      } else {
+        currentSampleData = { score: 89.5, grade: 'Excellent', whole: 89.2, broken: 6.5, discolored: 2.4, insect: 1.0, foreign: 0.9, total: 168 };
+      }
+    }
+
+    function executeAnalysis() {
+      const farmer = document.getElementById('inp-farmer').value || 'MANDI-BATCH-2025';
+      document.getElementById('res-farmer').innerText = farmer;
+      document.getElementById('cert-farmer').innerText = farmer;
+      document.getElementById('res-score').innerText = currentSampleData.score.toFixed(1);
+      document.getElementById('cert-score').innerText = currentSampleData.score.toFixed(1) + ' / 100';
+      document.getElementById('res-grade').innerText = currentSampleData.grade.toUpperCase() + ' GRADE';
+      document.getElementById('res-whole').innerText = currentSampleData.whole.toFixed(1) + '%';
+      document.getElementById('res-broken').innerText = currentSampleData.broken.toFixed(1) + '%';
+      document.getElementById('res-discolored').innerText = currentSampleData.discolored.toFixed(1) + '%';
+      document.getElementById('res-insect').innerText = currentSampleData.insect.toFixed(1) + '%';
+      document.getElementById('res-foreign').innerText = currentSampleData.foreign.toFixed(1) + '%';
+      document.getElementById('res-total').innerText = currentSampleData.total + ' items';
+
+      showView('results');
+    }
+
+    window.onload = () => {
+      drawSampleOnCanvas('good');
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>

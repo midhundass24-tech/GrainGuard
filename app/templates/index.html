@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GrainGuard — Live Camera Grain Quality Inspection</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @media print {
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+    }
+    .print-only { display: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900">
+
+  <!-- Header Banner -->
+  <div class="bg-emerald-950 text-emerald-200 text-xs px-4 py-1.5 border-b border-emerald-800 flex items-center justify-between no-print">
+    <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span><strong>GRAINGUARD LIVE TERMINAL:</strong> Real-time Smartphone/Webcam Computer Vision Intake Node.</span>
+      </div>
+      <span class="bg-emerald-900 px-2 py-0.5 rounded text-[11px] font-mono text-emerald-300">LIVE MODE ACTIVE</span>
+    </div>
+  </div>
+
+  <!-- Main Navigation -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showTab('capture')">
+          <div class="bg-emerald-600 p-2 rounded-lg text-white">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg tracking-tight">GrainGuard</span>
+              <span class="bg-emerald-950 border border-emerald-600 text-emerald-300 text-[10px] font-semibold px-1.5 py-0.5 rounded">LIVE AI</span>
+            </div>
+            <p class="text-xs text-slate-400 -mt-0.5">Camera Inspection & Certification</p>
+          </div>
+        </div>
+
+        <nav class="flex items-center gap-2 text-xs font-semibold">
+          <button onclick="showTab('capture')" id="nav-capture" class="px-3.5 py-2 rounded-md bg-emerald-600 text-white shadow hover:bg-emerald-500 flex items-center gap-1.5">
+            <i data-lucide="camera" class="w-4 h-4"></i> Live Camera
+          </button>
+          <button onclick="showTab('history')" id="nav-history" class="px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-1.5">
+            <i data-lucide="history" class="w-4 h-4"></i> Audit History
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- TAB 1: LIVE CAMERA CAPTURE & ANALYSIS -->
+    <div id="tab-capture" class="space-y-6">
+      
+      <!-- Welcome Hero -->
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 no-print">
+        <div>
+          <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Mandi Collection Terminal #01</span>
+          <h1 class="text-2xl font-extrabold tracking-tight mt-1">Live Camera Grain Intake Terminal</h1>
+          <p class="text-slate-300 text-xs mt-1 max-w-xl">Position your smartphone or webcam directly top-down over the grain sample tray and click capture to run instant AI grading.</p>
+        </div>
+      </div>
+
+      <!-- Batch Details & Setup -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Commodity Type</label>
+          <select id="grain-type" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 font-semibold bg-white focus:ring-2 focus:ring-emerald-500">
+            <option value="rice">Rice / Paddy (Active Model)</option>
+            <option value="wheat">Wheat</option>
+            <option value="pulses">Pulses / Lentils</option>
+          </select>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm md:col-span-2">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Farmer / Lot Reference ID</label>
+          <input type="text" id="farmer-ref" value="BATCH-LIVE-2026" placeholder="e.g. Farmer Ramesh / LOT-402" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500" />
+        </div>
+      </div>
+
+      <!-- Camera Viewport & Capture Controls -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 no-print">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">1</span>
+            <h2 class="font-bold text-slate-900 text-sm">Real-Time Camera Viewport</h2>
+          </div>
+          <button onclick="flipCamera()" class="text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
+            <i data-lucide="flip-horizontal" class="w-3.5 h-3.5"></i> Flip Camera
+          </button>
+        </div>
+
+        <!-- Video Viewport -->
+        <div class="flex flex-col items-center">
+          <div class="relative w-full max-w-lg aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-slate-800">
+            <video id="camera-feed" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <canvas id="snapshot-canvas" class="hidden"></canvas>
+
+            <!-- Guide Overlay -->
+            <div class="absolute inset-8 border-2 border-dashed border-emerald-400/80 rounded-xl pointer-events-none flex flex-col justify-between p-3">
+              <span class="text-[10px] bg-slate-900/80 text-emerald-300 px-2 py-0.5 rounded self-start font-mono">ALIGN TRAY BOUNDARY</span>
+              <span class="text-[10px] bg-slate-900/80 text-slate-300 px-2 py-0.5 rounded self-end">TOP-DOWN ANGLE</span>
+            </div>
+
+            <!-- Loading Spinner Overlay -->
+            <div id="analyzing-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-white text-xs gap-3 hidden">
+              <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="font-bold text-sm tracking-wide" id="analyzing-text">Processing Grains & Calculating Defects...</span>
+            </div>
+          </div>
+
+          <!-- Live Action Buttons -->
+          <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <button onclick="captureFromCamera()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-7 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm transition-transform transform active:scale-95">
+              <i data-lucide="camera" class="w-5 h-5"></i> Capture & Run Gemini Analysis
+            </button>
+
+            <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileUpload(event)" />
+            <button onclick="document.getElementById('file-input').click()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-sm">
+              <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i> Upload Image File
+            </button>
+          </div>
+
+          <!-- Quick Test Presets (Primary Folder Samples) -->
+          <div class="mt-4 pt-3 border-t border-slate-100 w-full max-w-lg">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block text-center mb-2">Test Pre-Calibrated Sample Trays:</span>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="testPrimarySample('rice_sample_good.jpg')" class="p-2.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-left text-xs transition-colors">
+                <span class="font-bold text-emerald-900 block">Sample A</span>
+                <span class="text-[10px] text-emerald-700">Premium Rice (~90% Sound)</span>
+              </button>
+              <button onclick="testPrimarySample('rice_sample_broken.jpg')" class="p-2.5 rounded-lg border border-blue-300 bg-blue-50 hover:bg-blue-100 text-left text-xs transition-colors">
+                <span class="font-bold text-blue-900 block">Sample B</span>
+                <span class="text-[10px] text-blue-700">Broken Grain (~18% Broken)</span>
+              </button>
+              <button onclick="testPrimarySample('rice_sample_discolored.jpg')" class="p-2.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-left text-xs transition-colors">
+                <span class="font-bold text-amber-900 block">Sample C</span>
+                <span class="text-[10px] text-amber-700">Mixed Defects (Discolor/Insect)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS SECTION (Appears immediately after capture) -->
+      <div id="results-panel" class="space-y-6 hidden">
+        
+        <!-- Score Banner -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div class="space-y-1.5 text-center lg:text-left">
+            <div class="flex items-center justify-center lg:justify-start gap-2">
+              <span class="text-xs bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded font-semibold" id="res-id">ID: GG-LIVE</span>
+              <span class="text-xs px-3 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300" id="res-grade-badge">GOOD GRADE</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200" id="res-ai-badge">🤖 Gemini Vision AI</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="res-title">Live Grain Inspection Assessment</h2>
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs text-slate-500 pt-1">
+              <span><strong>Farmer / Lot:</strong> <span id="res-farmer">BATCH-LIVE-2026</span></span>
+              <span><strong>Grains Analyzed:</strong> <span id="res-total-grains" class="font-bold font-mono text-slate-800">165 items</span></span>
+              <span><strong>Inference Time:</strong> <span id="res-latency" class="font-mono">312 ms</span></span>
+            </div>
+            <p class="text-xs text-slate-600 italic mt-1 bg-slate-50 p-2 rounded-lg border border-slate-200 hidden" id="res-ai-notes"></p>
+          </div>
+
+          <!-- Gauge -->
+          <div class="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <div class="text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Quality Score</span>
+              <div class="text-4xl font-black font-mono text-emerald-600" id="res-score">88.5</div>
+              <span class="text-[11px] text-slate-400 font-medium">out of 100.0</span>
+            </div>
+            <button onclick="openCertificateModal()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2">
+              <i data-lucide="award" class="w-4 h-4 text-amber-400"></i> View Certificate
+            </button>
+          </div>
+        </div>
+
+        <!-- 5-Class Defect Percentage Meters -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h3 class="font-bold text-slate-900 text-sm mb-3">5-Class Visual Defect Composition</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+              <span class="font-semibold text-emerald-800 flex items-center justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Whole Grain
+              </span>
+              <div class="text-2xl font-black text-emerald-950 font-mono mt-1" id="res-whole">89.2%</div>
+              <span class="text-[10px] text-emerald-700">Sound Kernel</span>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <span class="font-semibold text-blue-800 flex items-center justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span> Broken
+              </span>
+              <div class="text-2xl font-black text-blue-950 font-mono mt-1" id="res-broken">6.5%</div>
+              <span class="text-[10px] text-blue-700">&lt; 3/4 Length</span>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <span class="font-semibold text-amber-800 flex items-center justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span> Discolored
+              </span>
+              <div class="text-2xl font-black text-amber-950 font-mono mt-1" id="res-discolor">2.4%</div>
+              <span class="text-[10px] text-amber-700">Chalky / Pecked</span>
+            </div>
+
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+              <span class="font-semibold text-rose-800 flex items-center justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span> Insect Dmg
+              </span>
+              <div class="text-2xl font-black text-rose-950 font-mono mt-1" id="res-insect">1.0%</div>
+              <span class="text-[10px] text-rose-700">Boreholes</span>
+            </div>
+
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3">
+              <span class="font-semibold text-purple-800 flex items-center justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span> Foreign
+              </span>
+              <div class="text-2xl font-black text-purple-950 font-mono mt-1" id="res-foreign">0.9%</div>
+              <span class="text-[10px] text-purple-700">Husk / Stones</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deduction Card & AI Evidence Viewer Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Deduction Card -->
+          <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm text-xs space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-900 text-sm">Transparent Score Deductions</h3>
+              <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">Base: 100.0 pts</span>
+            </div>
+            <p class="text-slate-600 text-[11px]">Exact mathematical point deductions calculated per visual defect class:</p>
+            
+            <div class="space-y-2 pt-1">
+              <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+                <span>Broken Grain (1.5x factor):</span>
+                <span class="font-mono font-semibold" id="pen-broken">-9.75 pts</span>
+              </div>
+              <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+                <span>Discoloration (2.0x factor):</span>
+                <span class="font-mono font-semibold" id="pen-discolor">-4.80 pts</span>
+              </div>
+              <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+                <span>Insect Damage (5.0x factor):</span>
+                <span class="font-mono font-semibold text-rose-600" id="pen-insect">-5.00 pts</span>
+              </div>
+              <div class="p-2 bg-slate-50 rounded border border-slate-100 flex justify-between">
+                <span>Foreign Matter (10.0x factor):</span>
+                <span class="font-mono font-semibold text-purple-700" id="pen-foreign">-9.00 pts</span>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex justify-between font-bold text-slate-900">
+              <span>Total Points Deducted:</span>
+              <span class="text-rose-600 font-mono" id="pen-total">-28.55 pts</span>
+            </div>
+          </div>
+
+          <!-- AI Evidence Viewer -->
+          <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i> AI Bounding Box Evidence
+                </h3>
+                <p class="text-slate-500 text-[11px]">Pinpoint optical segmentation performed on your camera capture.</p>
+              </div>
+              <div class="flex gap-1 text-xs">
+                <button onclick="toggleAnnotated(true)" id="btn-show-ann" class="px-2.5 py-1 rounded bg-slate-900 text-white font-semibold">AI Annotated</button>
+                <button onclick="toggleAnnotated(false)" id="btn-show-raw" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Raw Capture</button>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center p-2 min-h-[300px] max-h-[420px]">
+              <img id="evidence-img" src="" alt="AI Evidence" class="max-h-[380px] object-contain rounded select-none" />
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: AUDIT HISTORY -->
+    <div id="tab-history" class="space-y-6 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Mandi Inspection History</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Auditable records stored securely in the local SQLite database.</p>
+        </div>
+        <button onclick="loadHistory()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-lg font-semibold flex items-center gap-1">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+            <tr>
+              <th class="px-5 py-3">Timestamp & ID</th>
+              <th class="px-4 py-3">Commodity</th>
+              <th class="px-4 py-3">Farmer / Lot</th>
+              <th class="px-4 py-3">Grains</th>
+              <th class="px-4 py-3">Quality Score</th>
+              <th class="px-4 py-3">Grade</th>
+              <th class="px-5 py-3 text-right">Certificate</th>
+            </tr>
+          </thead>
+          <tbody id="history-rows" class="divide-y divide-slate-100">
+            <tr><td colspan="7" class="p-8 text-center text-slate-400">Loading records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: DIGITAL CERTIFICATE -->
+  <div id="cert-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative border-4 border-slate-900">
+      <button onclick="closeCertificateModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+
+      <div class="text-center pb-4 border-b-2 border-slate-900">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <div class="bg-emerald-700 text-white p-1.5 rounded-lg">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <span class="text-2xl font-black uppercase text-slate-900">GrainGuard</span>
+        </div>
+        <h2 class="text-base font-bold uppercase tracking-wider text-slate-800">Digital Grain Quality Intake Certificate</h2>
+        <p class="text-xs text-slate-500 font-mono">Cryptographically Tamper-Evident Intake Proof</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-b border-slate-200 text-xs">
+        <div>
+          <span class="text-slate-400 uppercase text-[10px] font-semibold">Certificate Number</span>
+          <div class="font-bold font-mono text-slate-900" id="modal-cert-num">GG-20260903-01</div>
+        </div>
+        <div>
+          <span class="text-slate-400 uppercase text-[10px] font-semibold">Commodity</span>
+          <div class="font-bold text-slate-900 capitalize" id="modal-cert-grain">Rice</div>
+        </div>
+        <div>
+          <span class="text-slate-400 uppercase text-[10px] font-semibold">Batch / Farmer</span>
+          <div class="font-medium text-slate-800" id="modal-cert-farmer">BATCH-LIVE</div>
+        </div>
+        <div>
+          <span class="text-slate-400 uppercase text-[10px] font-semibold">Intake Decision</span>
+          <div class="font-bold text-emerald-700" id="modal-cert-decision">ACCEPTED</div>
+        </div>
+      </div>
+
+      <div class="py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-xl px-5 my-4">
+        <div>
+          <span class="text-xs uppercase font-semibold text-slate-500">Verified Quality Score</span>
+          <div class="text-3xl font-extrabold text-slate-900 font-mono" id="modal-cert-score">88.5 / 100</div>
+        </div>
+        <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full border border-emerald-300" id="modal-cert-grade">GOOD GRADE</span>
+      </div>
+
+      <div class="pt-4 border-t-2 border-slate-900 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <img id="modal-cert-qr" src="" alt="QR" class="w-20 h-20 border border-slate-300 rounded p-1 bg-white" />
+          <div class="text-xs">
+            <div class="font-bold text-slate-900">Verifiable QR Seal</div>
+            <p class="text-[10px] text-slate-500 font-mono" id="modal-cert-token">Token: ...</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="window.print()" class="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeStream = null;
+    let facingMode = 'environment';
+    let currentAnalysis = null;
+
+    // Initialize real camera stream
+    async function startCamera() {
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
+      }
+      const video = document.getElementById('camera-feed');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false
+        });
+        activeStream = stream;
+        video.srcObject = stream;
+      } catch (err) {
+        console.warn('Camera access issue:', err);
+      }
+    }
+
+    function flipCamera() {
+      facingMode = facingMode === 'environment' ? 'user' : 'environment';
+      startCamera();
+    }
+
+    // Capture from active video feed and submit
+    function captureFromCamera() {
+      const video = document.getElementById('camera-feed');
+      const canvas = document.getElementById('snapshot-canvas');
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(blob => {
+        if (blob) submitImageBlob(blob);
+      }, 'image/jpeg', 0.92);
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (file) submitImageBlob(file);
+    }
+
+    // Generate quick sample tray on canvas if testing without grains
+    function useQuickSample() {
+      const canvas = document.getElementById('snapshot-canvas');
+      canvas.width = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+
+      // Dark tray background
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 1000, 1000);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(30, 30, 940, 940);
+
+      const rows = 12, cols = 14;
+      for (let r = 1; r <= rows; r++) {
+        for (let c = 1; c <= cols; c++) {
+          const x = c * 62 + Math.sin(r * c) * 10;
+          const y = r * 68 + Math.cos(r + c) * 10;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((r * 37 + c * 19) * Math.PI / 180);
+
+          if ((r * c) % 43 === 0) {
+            ctx.fillStyle = '#7c3aed'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+          } else if ((r * c) % 29 === 0) {
+            ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.ellipse(0, 0, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+          } else if ((r * c) % 17 === 0) {
+            ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.ellipse(0, 0, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
+          } else if ((r + c) % 11 === 0) {
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+
+      canvas.toBlob(blob => {
+        if (blob) submitImageBlob(blob);
+      }, 'image/jpeg', 0.95);
+    }
+
+    async function testPrimarySample(filename) {
+      const overlay = document.getElementById('analyzing-overlay');
+      const text = document.getElementById('analyzing-text');
+      text.innerText = 'Loading sample ' + filename + ' and running Gemini Vision AI...';
+      overlay.classList.remove('hidden');
+      try {
+        const resp = await fetch('/api/samples/' + filename);
+        if (!resp.ok) throw new Error('Could not load sample file from server.');
+        const blob = await resp.blob();
+        await submitImageBlob(blob);
+      } catch (err) {
+        alert('Sample error: ' + err.message);
+        overlay.classList.add('hidden');
+      }
+    }
+
+    // Submit image to real FastAPI /api/analyze
+    async function submitImageBlob(blob) {
+      const overlay = document.getElementById('analyzing-overlay');
+      const text = document.getElementById('analyzing-text');
+      text.innerText = 'Running Google Gemini Vision AI Quality Inspection...';
+      overlay.classList.remove('hidden');
+
+      const formData = new FormData();
+      formData.append('file', blob, 'camera_capture.jpg');
+      formData.append('grain_type', document.getElementById('grain-type').value);
+      formData.append('farmer_reference', document.getElementById('farmer-ref').value);
+
+      try {
+        const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert('Analysis Notice: ' + (data.detail || 'Image validation failed.'));
+          return;
+        }
+
+        currentAnalysis = data;
+        renderResults(data);
+      } catch (err) {
+        alert('Server Error: ' + err.message);
+      } finally {
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function renderResults(data) {
+      document.getElementById('res-id').innerText = 'ID: ' + data.inspection_id.substring(0, 12);
+      document.getElementById('res-farmer').innerText = data.farmer_reference;
+      document.getElementById('res-total-grains').innerText = data.total_objects + ' grains';
+      document.getElementById('res-latency').innerText = data.processing_time_ms + ' ms';
+      document.getElementById('res-score').innerText = data.quality_score.toFixed(1);
+      document.getElementById('res-grade-badge').innerText = (data.quality_result.category || 'GOOD').toUpperCase() + ' GRADE';
+
+      const aiBadge = document.getElementById('res-ai-badge');
+      if (data.ai_engine_used) {
+        aiBadge.innerText = '🤖 ' + (data.ai_engine_used.includes('gemini') ? 'Gemini Vision AI' : 'CV Engine');
+        aiBadge.className = data.ai_engine_used.includes('gemini') 
+          ? 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-300'
+          : 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-700 border border-slate-300';
+      }
+
+      const notesEl = document.getElementById('res-ai-notes');
+      if (data.ai_notes) {
+        notesEl.innerText = '💡 Gemini Observation: ' + data.ai_notes;
+        notesEl.classList.remove('hidden');
+      } else {
+        notesEl.classList.add('hidden');
+      }
+
+      document.getElementById('res-whole').innerText = data.quality_result.whole_pct.toFixed(1) + '%';
+      document.getElementById('res-broken').innerText = data.quality_result.broken_pct.toFixed(1) + '%';
+      document.getElementById('res-discolor').innerText = data.quality_result.discolor_pct.toFixed(1) + '%';
+      document.getElementById('res-insect').innerText = data.quality_result.insect_pct.toFixed(1) + '%';
+      document.getElementById('res-foreign').innerText = data.quality_result.foreign_pct.toFixed(1) + '%';
+
+      const p = data.quality_result.penalties || {};
+      document.getElementById('pen-broken').innerText = '-' + (p.broken_penalty || 0).toFixed(2) + ' pts';
+      document.getElementById('pen-discolor').innerText = '-' + (p.discoloration_penalty || 0).toFixed(2) + ' pts';
+      document.getElementById('pen-insect').innerText = '-' + (p.insect_penalty || 0).toFixed(2) + ' pts';
+      document.getElementById('pen-foreign').innerText = '-' + (p.foreign_matter_penalty || 0).toFixed(2) + ' pts';
+      document.getElementById('pen-total').innerText = '-' + (p.total_penalty || 0).toFixed(2) + ' pts';
+
+      document.getElementById('evidence-img').src = data.annotated_image_url;
+      document.getElementById('results-panel').classList.remove('hidden');
+
+      // Scroll smoothly to results
+      document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleAnnotated(showAnn) {
+      if (!currentAnalysis) return;
+      document.getElementById('evidence-img').src = showAnn ? currentAnalysis.annotated_image_url : currentAnalysis.image_url;
+      document.getElementById('btn-show-ann').className = showAnn ? 'px-2.5 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2.5 py-1 rounded bg-slate-100 text-slate-700';
+      document.getElementById('btn-show-raw').className = !showAnn ? 'px-2.5 py-1 rounded bg-slate-900 text-white font-semibold' : 'px-2.5 py-1 rounded bg-slate-100 text-slate-700';
+    }
+
+    function openCertificateModal() {
+      if (!currentAnalysis) return;
+      document.getElementById('modal-cert-num').innerText = currentAnalysis.certificate.certificate_number;
+      document.getElementById('modal-cert-grain').innerText = currentAnalysis.grain_type;
+      document.getElementById('modal-cert-farmer').innerText = currentAnalysis.farmer_reference;
+      document.getElementById('modal-cert-decision').innerText = currentAnalysis.quality_result.decision;
+      document.getElementById('modal-cert-score').innerText = currentAnalysis.quality_score.toFixed(1) + ' / 100';
+      document.getElementById('modal-cert-grade').innerText = currentAnalysis.quality_result.category.toUpperCase() + ' GRADE';
+      document.getElementById('modal-cert-qr').src = currentAnalysis.certificate.qr_code_url;
+      document.getElementById('modal-cert-token').innerText = 'Token: ' + currentAnalysis.certificate.verification_token;
+      document.getElementById('cert-modal').classList.remove('hidden');
+    }
+
+    function closeCertificateModal() {
+      document.getElementById('cert-modal').classList.add('hidden');
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/inspections');
+        const data = await res.json();
+        const tbody = document.getElementById('history-rows');
+        if (data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">No inspections logged yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.items.map(i => `
+          <tr class="hover:bg-slate-50">
+            <td class="px-5 py-3 font-mono font-medium">${i.created_at}</td>
+            <td class="px-4 py-3 capitalize font-semibold">${i.grain_type}</td>
+            <td class="px-4 py-3 text-slate-600">${i.farmer_reference}</td>
+            <td class="px-4 py-3 font-mono">${i.total_objects} items</td>
+            <td class="px-4 py-3 font-bold font-mono text-slate-900">${i.quality_score.toFixed(1)} / 100</td>
+            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">${i.category.toUpperCase()}</span></td>
+            <td class="px-5 py-3 text-right font-mono text-xs text-slate-500">${i.certificate_number}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function showTab(tab) {
+      document.getElementById('tab-capture').classList.toggle('hidden', tab !== 'capture');
+      document.getElementById('tab-history').classList.toggle('hidden', tab !== 'history');
+
+      document.getElementById('nav-capture').className = tab === 'capture' ? 'px-3.5 py-2 rounded-md bg-emerald-600 text-white shadow hover:bg-emerald-500 flex items-center gap-1.5' : 'px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-1.5';
+      document.getElementById('nav-history').className = tab === 'history' ? 'px-3.5 py-2 rounded-md bg-emerald-600 text-white shadow hover:bg-emerald-500 flex items-center gap-1.5' : 'px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-1.5';
+
+      if (tab === 'history') loadHistory();
+      lucide.createIcons();
+    }
+
+    window.onload = () => {
+      startCamera();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>

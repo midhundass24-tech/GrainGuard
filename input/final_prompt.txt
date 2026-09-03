@@ -1,0 +1,959 @@
+You are a senior full-stack engineer, computer-vision engineer, ML engineer, product designer and hackathon technical lead.
+
+Build a complete working MVP called “GrainGuard”, an AI-powered smartphone-based grain quality inspection and digital certification system for rural grain procurement centers.
+
+The objective is NOT to build an industrial grain sorting machine or replace laboratory/NIR testing. The objective is to demonstrate that visible grain-quality inspection can be made more objective, measurable, explainable and auditable using a smartphone camera, a standardized low-cost tray and computer vision.
+
+IMPORTANT:
+Prioritize a WORKING END-TO-END MVP over unnecessary complexity.
+The system must be easy for a student hackathon team to run locally.
+Do not build unnecessary blockchain, payment, IoT, marketplace, complicated authentication, or microservice infrastructure.
+The primary validated MVP grain type is RICE/PADDY. Design the code so wheat and pulses can be added later through separate models/configurations.
+
+==================================================
+
+1. PRODUCT CONCEPT
+   ==================================================
+
+User workflow:
+
+1. Procurement agent opens GrainGuard.
+2. Creates a new inspection.
+3. Selects grain type = Rice.
+4. Enters optional farmer/batch reference.
+5. Places a representative grain sample on a standardized contrasting tray.
+6. Captures a top-down smartphone photograph.
+7. Frontend sends the image to the backend.
+8. Backend validates/preprocesses the image.
+9. Computer vision model detects/classifies visible grain objects.
+10. System identifies:
+
+* whole grain
+* broken grain
+* discolored/damaged grain
+* insect-damaged grain
+* foreign matter
+
+11. Quality engine calculates percentages.
+12. System produces a transparent quality score.
+13. Results are displayed with annotated image evidence.
+14. Inspection is saved.
+15. A digital certificate is generated with a unique ID and QR verification code.
+16. QR opens a public verification page showing the inspection result.
+
+Target processing time for the prototype should be approximately 30 seconds or less, but never fake or hardcode processing performance. Measure and display actual processing time.
+
+==================================================
+2. TECHNOLOGY STACK
+===================
+
+Use:
+
+Frontend:
+
+* React
+* Vite
+* Tailwind CSS
+* Browser MediaDevices/camera API
+* Recharts or another lightweight chart library if needed
+* QR code generation library
+
+Backend:
+
+* Python
+* FastAPI
+* Pydantic
+* SQLAlchemy
+* SQLite
+* Uvicorn
+
+Computer Vision:
+
+* Python
+* OpenCV
+* NumPy
+* Pillow
+* PyTorch
+* A suitable YOLO-style object detection/segmentation framework OR a lightweight custom computer-vision/classification pipeline if a trained model is not available.
+
+Do not make the application dependent on downloading a huge model at runtime.
+
+The project must include a clear model abstraction so the AI implementation can later be replaced with a better trained model.
+
+Create an AI interface conceptually equivalent to:
+
+analyze_grain_image(image_path, grain_type)
+
+and make the rest of the application independent of the specific ML model.
+
+==================================================
+3. MVP AI MODEL
+===============
+
+The MVP must support these visual classes:
+
+* whole_grain
+* broken_grain
+* discolored_grain
+* insect_damaged
+* foreign_matter
+
+If a real trained model is not available, create a clearly separated mock/demo inference mode so the complete application can still run.
+
+IMPORTANT:
+Never present mock predictions as real AI validation.
+
+The UI must indicate DEMO/MOCK mode when applicable.
+
+If a trained model file exists in:
+
+backend/models/
+
+load it.
+
+Otherwise use the demo inference implementation.
+
+Create a README explaining exactly how a trained model can be inserted later.
+
+The model output should have:
+
+* class
+* confidence
+* bounding box
+* optional segmentation mask
+* object area where available
+
+Example:
+
+{
+"class": "broken_grain",
+"confidence": 0.91,
+"bbox": [120, 80, 154, 105]
+}
+
+==================================================
+4. IMAGE PROCESSING
+===================
+
+Implement an image preprocessing pipeline:
+
+1. Load image.
+2. Validate image.
+3. Detect/crop inspection area where possible.
+4. Normalize image.
+5. Resize appropriately.
+6. Run AI inference.
+7. Generate annotated output image.
+8. Return structured detection data.
+
+Add image-quality checks where practical:
+
+* image too dark
+* image too blurry
+* insufficient detectable objects
+
+If quality is clearly insufficient, return a warning requesting recapture rather than pretending the AI result is reliable.
+
+Do not overengineer automatic tray detection for the MVP.
+
+The frontend should guide the operator to place the grains inside a visible tray boundary.
+
+==================================================
+5. QUALITY ENGINE
+=================
+
+Create a separate quality calculation module.
+
+Do NOT hardcode real government procurement standards.
+
+Use configurable demo thresholds stored in configuration.
+
+Example configuration:
+
+{
+"broken_grain_warning": 5,
+"broken_grain_reject": 10,
+"foreign_matter_warning": 1,
+"foreign_matter_reject": 3,
+"insect_damage_warning": 1,
+"insect_damage_reject": 2
+}
+
+Clearly label these as configurable demonstration thresholds.
+
+Calculate:
+
+* total objects
+* whole percentage
+* broken percentage
+* discoloration percentage
+* insect damage percentage
+* foreign matter percentage
+
+Create a transparent weighted quality score.
+
+The exact formula must be visible in code and documented.
+
+For example, conceptually:
+
+score = 100
+- broken_penalty
+- discoloration_penalty
+- insect_damage_penalty
+- foreign_matter_penalty
+
+Clamp score to 0–100.
+
+Create quality categories such as:
+
+90–100 = Excellent
+75–89.99 = Good
+60–74.99 = Needs Review
+below 60 = Poor
+
+These are prototype categories and must be configurable.
+
+Do not claim that the score directly determines the official market price.
+
+==================================================
+6. EXPLAINABILITY
+=================
+
+This is one of the most important product features.
+
+The results page must show:
+
+* original image
+* annotated image
+* bounding boxes or masks
+* class labels
+* confidence values
+* object counts
+* percentages
+* quality score
+* explanation of major score deductions
+
+Example:
+
+Quality Score: 88.7
+
+Detected:
+Whole: 181
+Broken: 13
+Discolored: 5
+Insect damaged: 2
+Foreign matter: 2
+
+Show:
+
+Broken grain: 6.4%
+Discoloration: 2.5%
+Insect damage: 1.0%
+Foreign matter: 1.0%
+
+Add an “AI Evidence” section.
+
+Clicking an individual detected object should show:
+
+Object #137
+Classification: Insect-damaged
+Confidence: 94.2%
+
+If confidence is below a configurable threshold, show:
+
+“Low-confidence detection — manual review recommended.”
+
+==================================================
+7. FRONTEND
+===========
+
+Build a polished responsive web application suitable for a smartphone and laptop.
+
+Main navigation:
+
+* Dashboard
+* New Inspection
+* Inspection History
+
+Dashboard:
+
+Show:
+
+* today's inspections
+* average quality
+* number of flagged inspections
+* recent inspections
+
+New Inspection:
+
+Fields:
+
+* Grain type
+* Farmer/batch reference
+
+Initially support:
+
+Rice
+
+Keep the code extensible for:
+
+Wheat
+Pulses
+
+Capture page:
+
+* camera preview
+* tray placement guide
+* capture button
+* retake button
+* image quality warning
+
+Analysis page:
+
+Show progress states:
+
+Capturing
+Validating image
+Detecting grains
+Classifying defects
+Calculating quality
+Generating report
+
+Do not fake a long loading animation. Use actual backend state/progress where possible.
+
+Results page:
+
+Make this the visual centerpiece.
+
+Display:
+
+QUALITY SCORE
+88.7 / 100
+GOOD QUALITY
+
+Then:
+
+Total objects analyzed
+Whole
+Broken
+Discolored
+Insect damaged
+Foreign matter
+
+Use clear charts/bars.
+
+Include:
+
+[VIEW AI EVIDENCE]
+[GENERATE CERTIFICATE]
+
+Certificate page:
+
+Show:
+
+GrainGuard
+Digital Grain Quality Certificate
+
+Certificate ID
+Date/time
+Grain type
+Batch reference
+Sample count
+Quality score
+Defect statistics
+Annotated sample image
+QR code
+
+==================================================
+8. DATABASE
+===========
+
+Use SQLite.
+
+Create tables:
+
+users
+
+* id
+* name
+* role
+* created_at
+
+inspections
+
+* id
+* inspection_id
+* user_id
+* grain_type
+* farmer_reference
+* image_path
+* annotated_image_path
+* total_objects
+* quality_score
+* status
+* processing_time_ms
+* created_at
+
+detections
+
+* id
+* inspection_id
+* class_name
+* confidence
+* x1
+* y1
+* x2
+* y2
+* area
+
+quality_results
+
+* id
+* inspection_id
+* whole_percentage
+* broken_percentage
+* discolored_percentage
+* insect_damage_percentage
+* foreign_matter_percentage
+* quality_score
+* category
+* decision
+
+certificates
+
+* id
+* inspection_id
+* certificate_number
+* verification_token
+* created_at
+
+Use foreign keys.
+
+==================================================
+9. API
+======
+
+Implement:
+
+POST /api/inspections
+
+Creates a new inspection.
+
+POST /api/inspections/{inspection_id}/analyze
+
+Accepts image upload and performs analysis.
+
+GET /api/inspections/{inspection_id}
+
+Returns complete inspection result.
+
+GET /api/inspections
+
+Returns inspection history.
+
+GET /api/inspections/{inspection_id}/certificate
+
+Returns certificate information and/or PDF.
+
+GET /api/verify/{verification_token}
+
+Public certificate verification endpoint.
+
+GET /api/health
+
+Returns service health.
+
+Use proper HTTP status codes and validation.
+
+==================================================
+10. CERTIFICATE
+===============
+
+Generate a professional certificate.
+
+Certificate contents:
+
+GrainGuard
+Digital Grain Quality Certificate
+
+Certificate ID
+Inspection date/time
+Grain type
+Batch reference
+Sample analyzed
+Quality score
+Quality category
+
+Statistics:
+
+* Whole
+* Broken
+* Discolored
+* Insect damaged
+* Foreign matter
+
+Include:
+
+* small annotated image
+* QR code
+* verification token
+
+QR should point to:
+
+/verify/{verification_token}
+
+The public verification page must show:
+
+CERTIFICATE VERIFIED
+
+Certificate ID
+Inspection date
+Grain type
+Quality score
+Defect statistics
+
+Do not expose unnecessary internal database information.
+
+==================================================
+11. INSPECTION HISTORY
+======================
+
+Create a table/card view showing:
+
+Inspection ID
+Date
+Grain
+Batch
+Quality
+Status
+
+Allow clicking an inspection to open its complete result.
+
+Add basic search/filter by:
+
+* grain type
+* quality category
+* date
+
+Do not build complicated analytics unless the core application is complete.
+
+==================================================
+12. ERROR HANDLING
+==================
+
+Handle:
+
+* backend unavailable
+* invalid image
+* image too dark
+* image too blurry
+* no grain detected
+* too many overlapping objects
+* AI model unavailable
+* database error
+* certificate generation error
+
+Show useful human-readable messages.
+
+Never expose Python stack traces to the user.
+
+==================================================
+13. DEMO MODE
+=============
+
+The hackathon team must be able to demonstrate the complete product even without a trained ML model.
+
+Create a clearly marked DEMO MODE.
+
+Provide sample images in:
+
+demo/sample_images/
+
+The demo mode should return deterministic sample analysis results based on the selected sample.
+
+The interface must visibly say:
+
+“Demo inference mode”
+
+when the actual trained model is unavailable.
+
+Do not falsely represent demo results as experimentally validated AI performance.
+
+==================================================
+14. MODEL MODE
+==============
+
+Support:
+
+AI_MODE=demo
+
+and
+
+AI_MODE=model
+
+through environment configuration.
+
+When:
+
+AI_MODE=model
+
+load:
+
+backend/models/grain_model.*
+
+When:
+
+AI_MODE=demo
+
+use deterministic demo inference.
+
+==================================================
+15. SECURITY AND PRIVACY
+========================
+
+For the MVP:
+
+* Do not collect unnecessary personal information.
+* Farmer reference should be optional.
+* Validate file uploads.
+* Restrict upload size.
+* Only accept appropriate image formats.
+* Sanitize filenames.
+* Do not expose internal filesystem paths.
+* Use generated UUIDs/tokens for certificate verification.
+
+Authentication may be simplified for the hackathon.
+
+Do not build complicated OAuth.
+
+==================================================
+16. PROJECT STRUCTURE
+=====================
+
+Use a clean structure similar to:
+
+grain-guard/
+
+frontend/
+src/
+components/
+pages/
+services/
+hooks/
+utils/
+App.jsx
+main.jsx
+package.json
+
+backend/
+app/
+main.py
+api/
+models/
+schemas/
+services/
+ai/
+database/
+core/
+models/
+uploads/
+certificates/
+tests/
+requirements.txt
+
+demo/
+sample_images/
+
+docs/
+
+docker-compose.yml
+
+README.md
+
+.env.example
+
+Adapt the structure if needed, but keep frontend, backend, AI and data clearly separated.
+
+==================================================
+17. UX DESIGN
+=============
+
+Design for a rural procurement-center workflow.
+
+Prioritize:
+
+* large buttons
+* high contrast
+* readable typography
+* minimal typing
+* simple language
+* clear status indicators
+* obvious next action
+* mobile-first capture interface
+
+The operator should be able to complete:
+
+Create inspection
+→ Capture
+→ Analyze
+→ Review
+→ Certificate
+
+with minimal navigation.
+
+Do not overload the interface with technical AI terminology.
+
+==================================================
+18. VISUAL DESIGN
+=================
+
+Use a clean agricultural/professional visual language.
+
+Avoid excessive gradients, animations and decorative elements.
+
+The application should look like a real B2B/agri-tech product rather than a generic student dashboard.
+
+The results screen should prioritize:
+
+Quality score
+Defect breakdown
+AI evidence
+Certificate
+
+==================================================
+19. TESTING
+===========
+
+Create backend tests for:
+
+* inspection creation
+* quality score calculation
+* percentage calculation
+* API validation
+* certificate generation
+* verification endpoint
+
+Create AI utility tests for:
+
+* detection counting
+* statistics calculation
+* low-confidence detection handling
+
+Create at least one frontend smoke test if practical.
+
+Also include a manual testing checklist in README.
+
+==================================================
+20. DEPLOYMENT
+==============
+
+The application MUST run locally with minimal setup.
+
+Provide:
+
+1. Normal local development instructions.
+
+2. Docker-based instructions.
+
+Recommended:
+
+docker compose up
+
+The system should start:
+
+frontend
+backend
+
+Use environment variables.
+
+Create:
+
+.env.example
+
+Do not require proprietary cloud services.
+
+==================================================
+21. README
+==========
+
+Create a comprehensive README containing:
+
+Project overview
+Problem
+Solution
+Architecture
+Technology stack
+AI pipeline
+Database schema
+API documentation
+Local setup
+Docker setup
+Demo mode
+Real model setup
+Dataset preparation
+Model training instructions
+Testing
+Deployment
+Known limitations
+Future improvements
+
+Explicitly document:
+
+“This prototype targets visually observable grain-quality characteristics and does not replace laboratory/NIR analysis for properties that are not visually observable.”
+
+Also document that demo thresholds are configurable prototype values and not official procurement standards.
+
+==================================================
+22. FUTURE EXTENSIBILITY
+========================
+
+Design interfaces for future:
+
+* wheat model
+* pulses model
+* offline inference
+* multilingual interface
+* batch analytics
+* procurement-center analytics
+* human review workflow
+* calibration using standardized trays
+* improved segmentation
+* model confidence monitoring
+
+Do not implement all of these unless the MVP is already working.
+
+==================================================
+23. MOST IMPORTANT DEVELOPMENT RULE
+===================================
+
+Build the project in this order:
+
+1. Backend health endpoint.
+2. Database.
+3. Inspection creation.
+4. Image upload.
+5. AI inference abstraction.
+6. Demo inference.
+7. Detection result API.
+8. Quality calculation.
+9. Frontend capture page.
+10. Results page with annotated image.
+11. Inspection history.
+12. Certificate generation.
+13. QR verification.
+14. UI polish.
+15. Tests.
+16. Docker configuration.
+
+The first complete milestone must be:
+
+SMARTPHONE IMAGE
+→ BACKEND
+→ AI/DEMO INFERENCE
+→ DETECTIONS
+→ RESULTS ON SCREEN
+
+Do not spend substantial time on visual polish before this pipeline works.
+
+==================================================
+24. ACCEPTANCE CRITERIA
+=======================
+
+The MVP is considered successful only if a judge can perform this sequence:
+
+1. Open GrainGuard.
+2. Click New Inspection.
+3. Select Rice.
+4. Enter a batch reference.
+5. Capture/upload a sample image.
+6. See the analysis progress.
+7. See detected grain objects.
+8. See defect classifications.
+9. See percentages.
+10. See quality score.
+11. See an annotated evidence image.
+12. Save the inspection.
+13. Generate a certificate.
+14. Scan/click the QR verification.
+15. See “Certificate Verified”.
+16. Return to dashboard and see the inspection in history.
+
+The complete workflow should work without manually editing database records or source code.
+
+==================================================
+25. IMPORTANT PRODUCT POSITIONING
+=================================
+
+The application should communicate this concept:
+
+SEE → MEASURE → VERIFY
+
+SEE:
+Use a smartphone camera to capture a standardized grain sample.
+
+MEASURE:
+Computer vision converts visible defects into measurable statistics.
+
+VERIFY:
+The result becomes an auditable digital certificate.
+
+Do NOT market the system as replacing every form of grain laboratory testing.
+
+Do NOT claim that the prototype automatically determines official farmer payment.
+
+Do NOT claim arbitrary quality thresholds are government standards.
+
+The core innovation is:
+
+“A low-cost, smartphone-based, explainable and verifiable visual grain inspection workflow for procurement gates.”
+
+==================================================
+26. FINAL DELIVERABLE
+=====================
+
+Produce the complete runnable project.
+
+Do not merely provide pseudocode.
+
+Generate:
+
+* frontend code
+* backend code
+* database models
+* API routes
+* AI abstraction
+* demo inference
+* image processing
+* quality engine
+* certificate generation
+* QR verification
+* responsive UI
+* sample/demo data
+* tests
+* Docker configuration
+* README
+* .env.example
+
+Before finishing, verify that the end-to-end workflow works:
+
+Create inspection
+→ Upload/capture image
+→ Analyze
+→ Generate detections
+→ Calculate quality
+→ Save database record
+→ Display results
+→ Generate certificate
+→ Verify certificate
+
+If an advanced component cannot be implemented reliably within a hackathon MVP, implement a clean, clearly labeled fallback rather than leaving the application broken.
+
+The priority order is:
+
+1. Working end-to-end demo
+2. Reliable UX
+3. Explainable AI results
+4. Evidence-backed certificate
+5. Clean architecture
+6. Model accuracy improvements
+7. Advanced features
