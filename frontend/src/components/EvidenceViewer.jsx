@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { CLASS_METADATA } from '../utils/helpers';
+import { CLASS_METADATA, resolveImageUrl } from '../utils/helpers';
 import { Eye, Filter, AlertCircle, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 export default function EvidenceViewer({ imageUrl, annotatedImageUrl, detections = [] }) {
@@ -13,7 +13,8 @@ export default function EvidenceViewer({ imageUrl, annotatedImageUrl, detections
     return d.class_name === selectedFilter;
   });
 
-  const activeImage = showAnnotated && annotatedImageUrl ? annotatedImageUrl : imageUrl;
+  const rawImage = showAnnotated && annotatedImageUrl ? annotatedImageUrl : imageUrl;
+  const activeImage = resolveImageUrl(rawImage);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">

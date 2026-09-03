@@ -67,3 +67,21 @@ export function getGradeBadge(category) {
       return { label: category || 'UNKNOWN', bg: 'bg-slate-100 text-slate-700 border-slate-300' };
   }
 }
+
+export function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+  if (apiBase.startsWith('http://') || apiBase.startsWith('https://')) {
+    try {
+      const urlObj = new URL(apiBase);
+      return `${urlObj.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
